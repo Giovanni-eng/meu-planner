@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G4NDH1 Planner Pro</title>
+    <style>
+        :root {
+            --bg-base: #0d0d0f;
+            --bg-panel: #1a1a1e;
+            --bg-card: #242429;
+            --primary: #8257e5;
+            --primary-hover: #9466ff;
+            --success: #04d361;
+            --danger: #e23c3c;
+            --text-main: #e1e1e6;
+            --text-sec: #a8a8b3;
+            --border: #323238;
+            
+            /* Tags de Categoria */
+            --tag-estudo: #3b82f6;
+            --tag-trabalho: #f59e0b;
+            --tag-saude: #10b981;
+            --tag-lazer: #ec4899;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--bg-panel);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Cabeçalho e Dias da Semana */
+        header { padding: 20px; border-bottom: 1px solid var(--border); }
+        h1 { margin: 0 0 15px 0; color: var(--primary); text-align: center; }
+        
+        .progress-container { width: 100%; background: var(--bg-base); border-radius: 8px; height: 10px; margin-bottom: 5px; overflow: hidden;}
+        .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s; }
+        .progress-text { font-size: 0.85rem; color: var(--text-sec); text-align: right; }
+
+        .days-nav { display: flex; overflow-x: auto; background-color: var(--bg-base); }
+        .day-tab {
+            flex: 1; text-align: center; padding: 15px 10px; cursor: pointer;
+            border-bottom: 3px solid transparent; font-weight: 600; color: var(--text-sec);
+            transition: 0.2s; min-width: 80px;
+        }
+        .day-tab:hover { background-color: #1f1f24; }
+        .day-tab.active { color: var(--primary); border-bottom-color: var(--primary); background-color: var(--bg-panel); }
+
+        /* Layout Principal */
+        .main-content { display: flex; flex-wrap: wrap; padding: 20px; gap: 25px; }
+        
+        /* Formulário */
+        .form-section { flex: 1; min-width: 300px; background: var(--bg-card); padding: 20px; border-radius: 8px; height: fit-content; }
+        .form-section h2 { margin-top: 0; font-size: 1.2rem; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: var(--text-sec); }
+        input, select, textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;
+            background-color: var(--bg-base); color: var(--text-main); font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        textarea { resize: vertical; min-height: 60px; }
+        
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+        
+        button.btn-submit {
+            width: 100%; padding: 12px; background-color: var(--primary); color: white;
+            border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        button.btn-submit:hover { background-color: var(--primary-hover); }
+
+        /* Lista de Tarefas */
+        .schedule-section { flex: 2; min-width: 350px; }
+        .task-list { display: flex; flex-direction: column; gap: 15px; }
+        
+        .task-card {
+            background-color: var(--bg-card); padding: 15px; border-radius: 8px;
+            display: flex; gap: 15px; align-items: flex-start;
+            border-left: 5px solid var(--border); position: relative; transition: opacity 0.3s;
+        }
+        .task-card.completed { opacity: 0.6; }
+        .task-card.completed .task-title { text-decoration: line-through; color: var(--text-sec); }
+        
+        /* Cores de Prioridade na borda */
+        .task-card.p-alta { border-left-color: var(--danger); }
+        .task-card.p-media { border-left-color: #f59e0b; }
+        .task-card.p-baixa { border-left-color: var(--primary); }
+
+        .checkbox-container { padding-top: 2px; }
+        .custom-checkbox { width: 22px; height: 22px; cursor: pointer; accent-color: var(--success); }
+
+        .task-details { flex: 1; }
+        .task-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .task-title { margin: 0; font-size: 1.1rem; }
+        .task-time { font-size: 0.9rem; font-weight: bold; color: var(--text-sec); background: var(--bg-base); padding: 3px 8px; border-radius: 4px; }
+        
+        .task-meta { display: flex; gap: 10px; font-size: 0.8rem; margin-bottom: 8px; flex-wrap: wrap; }
+        .tag { padding: 3px 8px; border-radius: 12px; font-weight: bold; color: white; }
+        .cat-estudo { background-color: var(--tag-estudo); }
+        .cat-trabalho { background-color: var(--tag-trabalho); }
+        .cat-saude { background-color: var(--tag-saude); }
+        .cat-lazer { background-color: var(--tag-lazer); }
+        .cat-geral { background-color: var(--border); }
+
+        .task-notes { font-size: 0.85rem; color: var(--text-sec); margin: 0; line-height: 1.4; }
+
+        .btn-delete { background: none; border: none; color: var(--danger); cursor: pointer; padding: 5px; font-size: 1.2rem; transition: transform 0.2s;}
+        .btn-delete:hover { transform: scale(1.1); }
+        
+        .empty-state { text-align: center; color: var(--text-sec); padding: 40px 20px; font-style: italic; }
+
+        @media (max-width: 600px) {
+            .main-content { flex-direction: column; }
+            .task-header { flex-direction: column; gap: 5px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Meus Horários</h1>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-text" id="progressText">0% concluído</div>
+        </header>
+
+        <div class="days-nav" id="daysNav">
+            </div>
+
+        <div class="main-content">
+            <aside class="form-section">
+                <h2 id="formTitle">Adicionar em Segunda</h2>
+                <form id="taskForm">
+                    <div class="form-group">
+                        <label>Atividade</label>
+                        <input type="text" id="taskTitle" required placeholder="O que você vai fazer?">
+                    </div>
+                    <div class="row form-group">
+                        <div>
+                            <label>Início</label>
+                            <input type="time" id="taskStart" required>
+                        </div>
+                        <div>
+                            <label>Fim</label>
+                            <input type="time" id="taskEnd" required>
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <div>
+                            <label>Categoria</label>
+                            <select id="taskCategory">
+                                <option value="geral">Geral</option>
+                                <option value="estudo">Estudos</option>
+                                <option value="trabalho">Trabalho</option>
+                                <option value="saude">Saúde/Esporte</option>
+                                <option value="lazer">Lazer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Prioridade</label>
+                            <select id="taskPriority">
+                                <option value="media">Média</option>
+                                <option value="alta">Alta</option>
+                                <option value="baixa">Baixa</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Detalhes (Opcional)</label>
+                        <textarea id="taskNotes" placeholder="Anotações extras..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">+ Salvar Atividade</button>
+                </form>
+            </aside>
+
+            <section class="schedule-section">
+                <div class="task-list" id="taskList">
+                    </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+        let diaAtual = 'Segunda';
+        
+        // Estrutura de dados inicial com alguns exemplos pré-carregados
+        let agenda = JSON.parse(localStorage.getItem('agendaPro'));
+        if (!agenda) {
+            agenda = {
+                'Segunda': [
+                    { id: 1, title: 'Programação em C', start: '09:00', end: '11:30', category: 'estudo', priority: 'alta', notes: 'Fazer exercícios práticos', completed: false },
+                    { id: 2, title: 'Almoço (Dieta)', start: '12:00', end: '13:00', category: 'saude', priority: 'media', notes: 'Bater os macros do dia', completed: false },
+                    { id: 3, title: 'Treino de Vôlei', start: '18:00', end: '20:00', category: 'saude', priority: 'alta', notes: '', completed: false },
+                    { id: 4, title: 'Trabalho no Bar', start: '20:30', end: '02:00', category: 'trabalho', priority: 'alta', notes: '', completed: false }
+                ],
+                'Terça': [
+                    { id: 5, title: 'Jogar CS2', start: '22:00', end: '23:59', category: 'lazer', priority: 'baixa', notes: '', completed: false }
+                ],
+                'Quarta': [], 'Quinta': [], 'Sexta': [], 'Sábado': [], 'Domingo': []
+            };
+            salvarDados();
+        }
+
+        function salvarDados() {
+            localStorage.setItem('agendaPro', JSON.stringify(agenda));
+            atualizarProgresso();
+        }
+
+        // Renderiza as abas de navegação
+        const daysNav = document.getElementById('daysNav');
+        diasSemana.forEach(dia => {
+            const div = document.createElement('div');
+            div.className = `day-tab ${dia === diaAtual ? 'active' : ''}`;
+            div.innerText = dia;
+            div.onclick = () => mudarDia(dia, div);
+            daysNav.appendChild(div);
+        });
+
+        function mudarDia(dia, elementoClicado) {
+            diaAtual = dia;
+            document.querySelectorAll('.day-tab').forEach(el => el.classList.remove('active'));
+            elementoClicado.classList.add('active');
+            document.getElementById('formTitle').innerText = `Adicionar em ${dia}`;
+            renderizarTarefas();
+        }
+
+        function atualizarProgresso() {
+            const tarefasHoje = agenda[diaAtual] || [];
+            const total = tarefasHoje.length;
+            const concluidas = tarefasHoje.filter(t => t.completed).length;
+            
+            let porcentagem = 0;
+            if (total > 0) porcentagem = Math.round((concluidas / total) * 100);
+            
+            document.getElementById('progressBar').style.width = `${porcentagem}%`;
+            document.getElementById('progressText').innerText = `${porcentagem}% concluído (${concluidas}/${total})`;
+        }
+
+        function alternarConclusao(id) {
+            const tarefa = agenda[diaAtual].find(t => t.id === id);
+            if(tarefa) {
+                tarefa.completed = !tarefa.completed;
+                salvarDados();
+                renderizarTarefas();
+            }
+        }
+
+        function deletarTarefa(id) {
+            agenda[diaAtual] = agenda[diaAtual].filter(t => t.id !== id);
+            salvarDados();
+            renderizarTarefas();
+        }
+
+        function renderizarTarefas() {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            
+            const tarefasHoje = agenda[diaAtual] || [];
+            tarefasHoje.sort((a, b) => a.start.localeCompare(b.start));
+
+            if (tarefasHoje.length === 0) {
+                taskList.innerHTML = `<div class="empty-state">Dia livre! Nenhuma atividade programada para ${diaAtual}.</div>`;
+            } else {
+                tarefasHoje.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = `task-card p-${task.priority} ${task.completed ? 'completed' : ''}`;
+                    
+                    const catNomes = { geral: 'Geral', estudo: 'Estudos', trabalho: 'Trabalho', saude: 'Saúde', lazer: 'Lazer' };
+                    const prioNomes = { alta: 'Prioridade Alta', media: 'Prioridade Média', baixa: 'Prioridade Baixa' };
+
+                    card.innerHTML = `
+                        <div class="checkbox-container">
+                            <input type="checkbox" class="custom-checkbox" ${task.completed ? 'checked' : ''} onchange="alternarConclusao(${task.id})">
+                        </div>
+                        <div class="task-details">
+                            <div class="task-header">
+                                <h3 class="task-title">${task.title}</h3>
+                                <div class="task-time">${task.start} - ${task.end}</div>
+                            </div>
+                            <div class="task-meta">
+                                <span class="tag cat-${task.category}">${catNomes[task.category]}</span>
+                                <span style="color: var(--text-sec)">• ${prioNomes[task.priority]}</span>
+                            </div>
+                            ${task.notes ? `<p class="task-notes">${task.notes}</p>` : ''}
+                        </div>
+                        <button class="btn-delete" onclick="deletarTarefa(${task.id})" title="Excluir">🗑️</button>
+                    `;
+                    taskList.appendChild(card);
+                });
+            }
+            atualizarProgresso();
+        }
+
+        // Adicionar nova tarefa
+        document.getElementById('taskForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const novaTarefa = {
+                id: Date.now(),
+                title: document.getElementById('taskTitle').value,
+                start: document.getElementById('taskStart').value,
+                end: document.getElementById('taskEnd').value,
+                category: document.getElementById('taskCategory').value,
+                priority: document.getElementById('taskPriority').value,
+                notes: document.getElementById('taskNotes').value,
+                completed: false
+            };
+
+            agenda[diaAtual].push(novaTarefa);
+            salvarDados();
+            renderizarTarefas();
+            document.getElementById('taskForm').reset();
+        });
+
+        // Iniciar
+        renderizarTarefas();
+    </script>
+</body>
+</html>
